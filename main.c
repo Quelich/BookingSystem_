@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
+
 //Stores the information of Book object
 struct Book
 {
@@ -30,21 +32,45 @@ struct Customer
     double Wallet;
 };
 
-static int C_ID_ENUMARATION = 0;
-static int B_ID_ENUMARATION = 0;
-static int R_ID_ENUMARATION = 0;
+//Stores the information all Customer and saves the information into the Customers list
+static struct Customer Customers[150];
+//Stores the information all Book and saves the information into the Book list
+static struct Book Books[150];
+//Stores the information all Rented and saves the information into RentedBooks list
+static struct Rented RentedBooks[150];
 
-int main()
-{
-    return 0;
+//Enumerates Customer IDs -> static variable to create unique IDs
+static int C_ID_ENUMERATION = 0;
+//Enumerates Book IDs -> static variable to create unique IDs
+static int B_ID_ENUMERATION = 0;
+//Enumerates Rented Book IDs -> static variable to create unique IDs
+static int R_ID_ENUMERATION = 0;
 
-}
+
 
 //Creates a new customer
-void newCustomer(char _name[25], char _surname[25], int age, double wallet)
+int newCustomer(int _customerID, char _name[25], char _surname[25], int age, double wallet)
 {
     //! Auto-Increment #C_ID_ENUMARATION
     //Open the Customers.txt
+    FILE* fp = fopen("Customers.txt", "w+");
+    if(!fp) {
+        perror("File opening failed");
+        return EXIT_FAILURE;
+    }
+
+    int c; // note: int, not char, required to handle EOF
+    while ((c = fgetc(fp)) != EOF) { // standard C I/O file reading loop
+        putchar(c);
+    }
+
+    if (ferror(fp))
+        puts("I/O error when reading");
+    else if (feof(fp))
+        puts("End of file reached successfully");
+
+
+    fclose(fp);
     //Create the customer
     //save it to the list
     //close the file
@@ -100,5 +126,90 @@ void listCustomers()
 }
 void listBooks()
 {
+
+}
+
+//Entry-point of BookingSystem program
+int main()
+{
+    printf("1.\tCreate New Customer\n"
+           "2.\tDeposit Money to the Customer\n"
+           "3.\tAdd new Book\n"
+           "4.\tRent A Book\n"
+           "5.\tDelivery A Book\n"
+           "6.\tBurn Book\n"
+           "7.\tUpdate Customer Information\n"
+           "8.\tUpdate Book Information\n"
+           "9.\tList of Customers Who Rent a Book\n"
+           "10.\tList of Customers\n"
+           "11.\tList of Books\n");
+    printf("Select one Option:\n");
+    short option;
+    scanf("%d", &option);
+    bool isCustomer = false;
+    switch (option) {
+        case 1:
+            //A control element, bool, to stop asking for the information from the
+            while(!isCustomer)
+            {
+                //Getting a name from the user
+                printf("Enter the customer name:\n");
+                char _name[25];
+                gets(_name);
+                //Getting a surname from the user
+                printf("Enter the customer Surname:\n");
+                char _surname[25];
+                gets(_surname);
+                printf("Enter the customer Age:\n");
+                int _age;
+                scanf("%d", &_age);
+                printf("Enter the customer Wallet:\n");
+                double _wallet;
+                scanf("%lf", &_wallet);
+                //Checking for the name and surname whether they are in the customers list
+                for (int i = 0; i < sizeof Customers; i++)
+                {
+                    if (Customers[i].Name != _name || Customers[i].Surname != _surname)
+                    {
+                        //Passing the user input into list by newCustomer method
+                        int delegate_newCustomer = newCustomer(C_ID_ENUMERATION,
+                                                               _name,
+                                                               _surname,
+                                                               _age,
+                                                               _wallet);
+                        //The loop, asking for the user information, ends due to the valid information
+                        isCustomer = true;
+                        //The loop, searching for the user information to confirm, ends
+                        break;
+                    }
+                }
+            }
+            //It increments the ID after creating a customer
+            C_ID_ENUMERATION++;
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            break;
+        case 7:
+            break;
+        case 8:
+            break;
+        case 9:
+            break;
+        case 10:
+            break;
+        case 11:
+            break;
+        default:
+            printf("Invalid Input!"); //throw an error
+    }
+    return 0;
 
 }
