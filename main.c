@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
+
 
 #pragma region Structures
 //Stores the information of Book object
@@ -39,7 +39,6 @@ struct Customer
 #pragma region Lists of the data
 //Stores the information all Customer and saves the information into the Customers list
 static struct Customer Customers[150];
-
 //Stores the information all Book and saves the information into the Books list
 static struct Book Books[150] = {0};
 //Stores the information all Rented and saves the information into RentedBooks list
@@ -47,44 +46,52 @@ static struct Rented RentedBooks[150] = {0};
 #pragma endregion Lists of the data
 
 #pragma region Enumeraters of ID numbers
-
 //Enumerates Book IDs -> static variable to create unique IDs
 static int B_ID_ENUMERATION = 1;
 //Enumerates Rented Book IDs -> static variable to create unique IDs
 static int R_ID_ENUMERATION = 1;
+static int enumerate_latest_CID = 0; // Storing the last ID executed in the file by counting the line numbers
 #pragma endregion Enumeraters of ID numbers
 
-#pragma endregion Booking System functions
-
 #pragma region Functions For Array Operations
-static int current = 0;
+
+int lineCounter()
+{
+    // count the number of lines in the file called filename
+    FILE *customersFile = fopen("Customers.txt", "r");
+    int ch=0;
+    int lines=0;
+    lines++;
+    while ((ch = fgetc(customersFile)) != EOF)
+    {
+        if (ch == '\n')
+            lines++;
+    }
+    fclose(customersFile);
+    return lines;
+}
+
 void addCustomer(struct Customer newCustomer)
 {
-    if(current <= sizeof Customers)
+    enumerate_latest_CID = lineCounter();
+    if(enumerate_latest_CID <= sizeof Customers)
     {
-        Customers[current] = newCustomer;
-        current++;
+        Customers[enumerate_latest_CID] = newCustomer;
+        newCustomer.C_ID = enumerate_latest_CID;
     }
     else
     {
-        perror("YOU REACHED THE LIMIT! CANNOT ADD ANY MORE ELEMENTS!");
-    }
-}
-void initializeCIDs()
-{
-    //Initializing the IDs of all customers
-    for(int element = 0; element < sizeof Customers; element++) //sizeof Customers
-    {
-        Customers[element].C_ID = element;
+        perror("YOU REACHED THE LIMIT! CANNOT ADD MORE THAN 150 CUSTOMERS!");
     }
 }
 #pragma endregion Functions For Array Operations
 
 #pragma region Booking System functions
 //Creates a new customer
-int newCustomer(int _customerID, char _name[25], char _surname[25], int _age, int _wallet)
+int newCustomer(char _name[25], char _surname[25], int _age, int _wallet)
 {
     //Creating a new Customer and passing the parameters, taken from the user, into it
+    int _customerID = lineCounter();
     struct Customer newCustomer;
     newCustomer.C_ID = _customerID;
     strcpy(newCustomer.Name, _name);
@@ -94,12 +101,13 @@ int newCustomer(int _customerID, char _name[25], char _surname[25], int _age, in
     //Adding the customer created recently to the Customers list
     addCustomer(newCustomer);
     //Appending the Customers.txt to put the Customers information line by line.
-    FILE* fp = fopen("Customers.txt", "a");
-    if(!fp) {
+    FILE* customersFile = fopen("Customers.txt", "a");
+    if(!customersFile) {
         perror("File opening failed");
+        fopen("Customers.txt", "w");
         return EXIT_FAILURE;
     }
-    fprintf(fp, "Customer ID #%d |"
+    fprintf(customersFile, "Customer ID #%d |"
                 "Customer Name: %s |"
                 "Customer Surname: %s |"
                 "Customer Age: %d |"
@@ -109,11 +117,13 @@ int newCustomer(int _customerID, char _name[25], char _surname[25], int _age, in
             newCustomer.Surname,
             newCustomer.Age,
             newCustomer.Wallet);
-    fclose(fp);
+    fclose(customersFile);
+    return 0;
 }
 //Selects the customer by ID and increases its deposit
 void depositMoney(int _customerID, double _deposit)
 {
+    //bir işe yaramaz çünkü array resetleniyor -> Customers.txt dosyasından çekmen lazım bilgiyi
     for(int element = 0; element <= sizeof Customers; element++)
     {
        if( Customers[element].C_ID == _customerID)
@@ -162,19 +172,25 @@ void listCustomersRentedBook()
 {
 
 }
+
 int listCustomers()
 {
-
+    printf("List of our precious customers\n");
     //Writing every element of the Customers array into the Customers.txt
-    for(int element = 0; element <= sizeof Customers; element++) //sizeof Customers
-    {
-        printf("Customer ID: #[%d] | "
-               "Customer Name: [%s] | "
-               "Customer Surname: [%s] | "
-               "Customer Age: [%d] | "
-               "Customer Wallet: [%lf]\n", Customers[element].C_ID,Customers[element].Name, Customers[element].Surname, Customers[element].Age, Customers[element].Wallet);
+    FILE* customersFile = fopen("Customers.txt", "r");
+    if(!customersFile) {
+        perror("Customers.txt file opening failed");
+        return EXIT_FAILURE;
     }
-
+    char c;
+    c = fgetc(customersFile);
+    while (c != EOF)
+    {
+        printf ("%c", c);
+        c = fgetc(customersFile);
+    }
+    fclose(customersFile);
+    return 0;
 }
 void listBooks()
 {
@@ -183,7 +199,7 @@ void listBooks()
 
 //Enumerates Customer IDs -> static variable to create unique IDs
 static int C_ID_ENUMERATION = 1;
-int proceedOption1()
+int getCustomerInput()
 {
     //Processing the option
     bool isCustomer = false;
@@ -214,41 +230,29 @@ int proceedOption1()
             } else{
                 isCustomer = true;
                 //Passing the user input into list by newCustomer method
-                newCustomer(C_ID_ENUMERATION,
-                            _name,
+                newCustomer(_name,
                             _surname,
                             _age,
                             _wallet);
-                C_ID_ENUMERATION++; //! Auto-Increment #C_ID_ENUMERATION
                 return -1;
                 //The loop, asking for the user information, ends due to the valid information
             }
         }
     }
 }
-int isExist(const char* filename){
-    struct stat buffer;
-    int exist = stat(filename,&buffer);
-    if(exist == 0)
-        return 1;
-    else // -1
-        return 0;
-}
 
 
 int runProgram()
 {
-    char* fileCustomers = "Customers.txt";
-    int customersExist = isExist(fileCustomers);
-    FILE* fp = fopen(fileCustomers, "w");
-    if(!fp) {
-        perror("Customers.txt file opening failed");
-        return EXIT_FAILURE;
+    FILE* readCustomersFile = fopen("Customers.txt", "r");
+    //Checking whether the file exists for read mode
+    if(!readCustomersFile) {
+        //if not, creating Customers.txt file
+        FILE* writeCustomersFile = fopen("Customers.txt", "w");
+        fclose(writeCustomersFile);
     }
-    else if(customersExist)
-    {
-
-    }
+    // Now reading the file created recently
+    FILE* customersFile = fopen("Customers.txt", "r");
     //Looping the program
     bool isExit = false;
     while(!isExit)
@@ -273,42 +277,54 @@ int runProgram()
         switch (option) {
             case 0:
                 isExit = true;
+                fclose(customersFile);
                 printf("You exit Booking System program. See you again");
                 return -1;
             case 1:
-                proceedOption1();
-
+                lineCounter();
+                getCustomerInput();
+                fclose(customersFile);
                 break;
             case 2:
+                fclose(customersFile);
                 break;
             case 3:
+                fclose(customersFile);
                 break;
             case 4:
+                fclose(customersFile);
                 break;
             case 5:
+                fclose(customersFile);
                 break;
             case 6:
+                fclose(customersFile);
                 break;
             case 7:
+                fclose(customersFile);
                 break;
             case 8:
+                fclose(customersFile);
                 break;
             case 9:
+                fclose(customersFile);
                 break;
             case 10:
                 listCustomers();
+                fclose(customersFile);
                 break;
             case 11:
                 break;
             default:
                 perror("Invalid Input!");
+                return -1;
         }
 
     }
 
 }
 
-//Entry-point of BookingSystem program
+//Entry-point of Booking System program
 int main()
 {
     runProgram();
