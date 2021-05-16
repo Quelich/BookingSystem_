@@ -36,6 +36,8 @@ struct Customer
 };
 #pragma endregion Structures
 
+
+
 #pragma region Lists of the data
 //Stores the information all Customer and saves the information into the Customers list
 static struct Customer Customers[150];
@@ -53,8 +55,29 @@ static int R_ID_ENUMERATION = 1;
 static int enumerate_latest_CID = 0; // Storing the last ID executed in the file by counting the line numbers
 #pragma endregion Enumeraters of ID numbers
 
-#pragma region Functions For Array Operations
 
+
+
+#pragma region Functions For Array Operations
+int readline(char *filename[20])
+{
+    //Checking whether the file exists for read mode
+    FILE* readCustomersBufferDataFile = fopen("CustomersBufferData.txt", "r");
+    if(!readCustomersBufferDataFile) {
+        perror("File opening failed");
+        return EXIT_FAILURE;
+    }
+    char line[128];
+
+    return 0;
+}
+// Gets every data from the text file and saves it into a struct array
+void textToArray()
+{
+
+}
+
+//Counting line in order to indicate the current customer's ID
 int lineCounter()
 {
     // count the number of lines in the file called filename
@@ -71,6 +94,10 @@ int lineCounter()
     return lines;
 }
 
+#pragma endregion Functions For Array Operations
+
+#pragma region Booking System functions
+//
 void addCustomer(struct Customer newCustomer)
 {
     enumerate_latest_CID = lineCounter();
@@ -84,9 +111,53 @@ void addCustomer(struct Customer newCustomer)
         perror("YOU REACHED THE LIMIT! CANNOT ADD MORE THAN 150 CUSTOMERS!");
     }
 }
-#pragma endregion Functions For Array Operations
+//Saves the buffer input data of Customers into machine-readable format (line-each-data)
+int saveBufferCustomerData(struct Customer newCustomerBufferData)
+{
+    //Checking whether the file exists for read mode
+    FILE* readCustomersBufferDataFile = fopen("CustomersBufferData.txt", "r");
+    if(!readCustomersBufferDataFile) {
+        //if not, creating CustomersBufferData.txt file
+        FILE* writeCustomersBufferDataFile = fopen("CustomersBufferData.txt", "w");
+        fclose(writeCustomersBufferDataFile);
+    }
+    FILE* customersBufferDataFile = fopen("CustomersBufferData.txt", "a");
+    if(!customersBufferDataFile) {
+        perror("File opening failed");
+        fopen("CustomersBufferData.txt", "w");
+        return EXIT_FAILURE;
+    }
+    fprintf(customersBufferDataFile, "%d\n"
+                                     "%s\n"
+                                     "%s\n"
+                                     "%d\n"
+                                     "%d\n",
+            newCustomerBufferData.C_ID,
+            newCustomerBufferData.Name,
+            newCustomerBufferData.Surname,
+            newCustomerBufferData.Age,
+            newCustomerBufferData.Wallet);
+    fclose(customersBufferDataFile);
+    return 0;
+}
 
-#pragma region Booking System functions
+//Converts every line in CustomersBufferData.txt into Customers[150] array to make the data ready for being manipulated
+int toCustomerArray()
+{
+    FILE* readCustomersBufferDataFile = fopen("CustomersBufferData.txt", "r");
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+    if(!readCustomersBufferDataFile) {
+        perror("File opening failed");
+        return EXIT_FAILURE;
+    }
+
+    fclose(readCustomersBufferDataFile);
+    //if (line)free(line);
+    return 0;
+
+}
 //Creates a new customer
 int newCustomer(char _name[25], char _surname[25], int _age, int _wallet)
 {
@@ -98,8 +169,10 @@ int newCustomer(char _name[25], char _surname[25], int _age, int _wallet)
     strcpy(newCustomer.Surname,_surname);
     newCustomer.Age = _age;
     newCustomer.Wallet = _wallet;
-    //Adding the customer created recently to the Customers list
+    //Adding the customer created recently to the Customers list for listing
     addCustomer(newCustomer);
+    //Saving the customer buffer data which will be later saved into a array of structs
+    saveBufferCustomerData(newCustomer);
     //Appending the Customers.txt to put the Customers information line by line.
     FILE* customersFile = fopen("Customers.txt", "a");
     if(!customersFile) {
@@ -107,6 +180,7 @@ int newCustomer(char _name[25], char _surname[25], int _age, int _wallet)
         fopen("Customers.txt", "w");
         return EXIT_FAILURE;
     }
+    //Writing Customer Data for its listing
     fprintf(customersFile, "Customer ID #%d |"
                 "Customer Name: %s |"
                 "Customer Surname: %s |"
@@ -123,7 +197,7 @@ int newCustomer(char _name[25], char _surname[25], int _age, int _wallet)
 //Selects the customer by ID and increases its deposit
 void depositMoney(int _customerID, double _deposit)
 {
-    //bir işe yaramaz çünkü array resetleniyor -> Customers.txt dosyasından çekmen lazım bilgiyi
+    //bir işe yaramaz çünkü array resetleniyor programı yeniden başlattığında-> Customers.txt dosyasından çekmen lazım bilgiyi
     for(int element = 0; element <= sizeof Customers; element++)
     {
        if( Customers[element].C_ID == _customerID)
@@ -192,6 +266,7 @@ int listCustomers()
     fclose(customersFile);
     return 0;
 }
+
 void listBooks()
 {
 
