@@ -12,7 +12,7 @@ struct Book
     char Name[25];
     char Author[25];
     int AgeLimit;
-    double PricePerWeek;
+    int PricePerWeek;
     bool Rented;
 };
 //Stores the information of Rented object
@@ -49,7 +49,7 @@ static struct Rented RentedBooks[150] = {0};
 
 #pragma region Enumeraters of ID numbers
 //Enumerates Book IDs -> static variable to create unique IDs
-static int B_ID_ENUMERATION = 1;
+static int enumerate_latest_BID = 0;
 //Enumerates Rented Book IDs -> static variable to create unique IDs
 static int R_ID_ENUMERATION = 1;
 static int enumerate_latest_CID = 0; // Storing the last ID executed in the file by counting the line numbers
@@ -57,25 +57,8 @@ static int enumerate_latest_CID = 0; // Storing the last ID executed in the file
 
 
 
-
 #pragma region Functions For Array Operations
-int readline(char *filename[20])
-{
-    //Checking whether the file exists for read mode
-    FILE* readCustomersBufferDataFile = fopen("CustomersBufferData.txt", "r");
-    if(!readCustomersBufferDataFile) {
-        perror("File opening failed");
-        return EXIT_FAILURE;
-    }
-    char line[128];
 
-    return 0;
-}
-// Gets every data from the text file and saves it into a struct array
-void textToArray()
-{
-
-}
 
 //Counting line in order to indicate the current customer's ID
 int lineCounter()
@@ -97,14 +80,67 @@ int lineCounter()
 #pragma endregion Functions For Array Operations
 
 #pragma region Booking System functions
-//
-void addCustomer(struct Customer newCustomer)
+//Prints the content of given array
+void printCustomersArray()
+{
+    for (int i = 0; i < 5; i++) {
+        printf("Array Place:%d CID:%d Name:%s Surname:%s Age:%d Wallet:%d\n", i, Customers[i].C_ID,Customers[i].Name,Customers[i].Surname, Customers[i].Age,Customers[i].Wallet);
+    }
+}
+void printBooksArray()
+{
+    for (int i = 0; i < 5; i++) {
+        printf("Array Place:%d BID:%d Name:%s Author:%s Age Limit:%d Rented:%d\n", i, Books[i].B_ID,Books[i].Name,Books[i].Author, Books[i].AgeLimit,Books[i].Rented);
+    }
+}
+int addCustomerTOCustomers(struct Customer newCustomer)
+{
+    Customers[enumerate_latest_CID-1].C_ID = newCustomer.C_ID;
+    strcpy(Customers[enumerate_latest_CID-1].Name,newCustomer.Name);
+    strcpy(Customers[enumerate_latest_CID-1].Surname,newCustomer.Surname);
+    Customers[enumerate_latest_CID-1].Age = newCustomer.Age;
+    Customers[enumerate_latest_CID-1].Wallet = newCustomer.Wallet;
+    if(Customers[enumerate_latest_CID-1].C_ID == newCustomer.C_ID)
+    {
+        printf("New customer has successfully added into the customers array");
+    }
+    printf("New customer has NOT added into the customers array");
+    return -1;
+}
+int addBookTOBooks(struct Book newBook)
+{
+    Customers[enumerate_latest_BID-1].C_ID = newBook.B_ID;
+    strcpy(Customers[enumerate_latest_BID-1].Name, newBook.Name);
+    strcpy(Customers[enumerate_latest_BID-1].Surname, newBook.Author);
+    Customers[enumerate_latest_BID-1].Age = newBook.AgeLimit;
+    Customers[enumerate_latest_BID-1].Wallet = newBook.PricePerWeek;
+    if(Customers[enumerate_latest_BID-1].C_ID == newBook.B_ID)
+    {
+        printf("New book has successfully added into the customers array");
+    }
+    printf("New book has NOT added into the customers array");
+    return -1;
+}
+void setCID(struct Customer newCustomer)
 {
     enumerate_latest_CID = lineCounter();
     if(enumerate_latest_CID <= sizeof Customers)
     {
-        Customers[enumerate_latest_CID] = newCustomer;
         newCustomer.C_ID = enumerate_latest_CID;
+        addCustomerTOCustomers(newCustomer);
+    }
+    else
+    {
+        perror("YOU REACHED THE LIMIT! CANNOT ADD MORE THAN 150 CUSTOMERS!");
+    }
+}
+void setBID(struct Book newBook)
+{
+    enumerate_latest_CID = lineCounter();
+    if(enumerate_latest_CID <= sizeof Customers)
+    {
+        newBook.B_ID = enumerate_latest_CID;
+        addBookTOBooks(newBook);
     }
     else
     {
@@ -141,23 +177,20 @@ int saveBufferCustomerData(struct Customer newCustomerBufferData)
     return 0;
 }
 
-//Converts every line in CustomersBufferData.txt into Customers[150] array to make the data ready for being manipulated
-int toCustomerArray()
+//! Filedan arraye koyma işini çözersen bunu kullabilirsin -> şimdilik program tek oturum için istenilen sonucu veriyor.
+int toCustomersArray()
 {
     FILE* readCustomersBufferDataFile = fopen("CustomersBufferData.txt", "r");
-    char * line = NULL;
-    size_t len = 0;
-    ssize_t read;
     if(!readCustomersBufferDataFile) {
-        perror("File opening failed");
-        return EXIT_FAILURE;
+        //if not, creating CustomersBufferData.txt file
+        FILE* writeCustomersBufferDataFile = fopen("CustomersBufferData.txt", "w");
+        fclose(writeCustomersBufferDataFile);
     }
-
-    fclose(readCustomersBufferDataFile);
-    //if (line)free(line);
+    FILE* customersBufferDataFile = fopen("CustomersBufferData.txt", "a");
+    fclose(customersBufferDataFile);
     return 0;
-
 }
+
 //Creates a new customer
 int newCustomer(char _name[25], char _surname[25], int _age, int _wallet)
 {
@@ -170,7 +203,7 @@ int newCustomer(char _name[25], char _surname[25], int _age, int _wallet)
     newCustomer.Age = _age;
     newCustomer.Wallet = _wallet;
     //Adding the customer created recently to the Customers list for listing
-    addCustomer(newCustomer);
+    setCID(newCustomer);
     //Saving the customer buffer data which will be later saved into a array of structs
     saveBufferCustomerData(newCustomer);
     //Appending the Customers.txt to put the Customers information line by line.
@@ -194,29 +227,77 @@ int newCustomer(char _name[25], char _surname[25], int _age, int _wallet)
     fclose(customersFile);
     return 0;
 }
-//Selects the customer by ID and increases its deposit
-void depositMoney(int _customerID, double _deposit)
+int lineCounterForBook()
 {
-    //bir işe yaramaz çünkü array resetleniyor programı yeniden başlattığında-> Customers.txt dosyasından çekmen lazım bilgiyi
-    for(int element = 0; element <= sizeof Customers; element++)
+    // count the number of lines in the file called filename
+    FILE *booksFile = fopen("books.txt", "r");
+    int ch=0;
+    int lines=0;
+    lines++;
+    while ((ch = fgetc(booksFile)) != EOF)
     {
-       if( Customers[element].C_ID == _customerID)
+        if (ch == '\n')
+            lines++;
+    }
+    fclose(booksFile);
+    return lines;
+}
+//creating a new book
+int newBook(char _name[25], char _authorName[25], int _ageLimit, int _pricePerWeek,bool _isRented)
+{
+    //Creating a new Customer and passing the parameters, taken from the user, into it
+    int _bookID = lineCounterForBook();
+    struct Book newBook;
+    newBook.B_ID = _bookID;
+    strcpy(newBook.Name, _name);
+    strcpy(newBook.Author, _authorName);
+    newBook.AgeLimit = _ageLimit;
+    newBook.PricePerWeek = _pricePerWeek;
+    newBook.Rented = _isRented;
+    //Adding the customer created recently to the Customers list for listing
+    setBID(newBook);
+    //Saving the customer buffer data which will be later saved into a array of structs
+    //!saveBufferCustomerData(newBook);
+    //Appending the Customers.txt to put the Customers information line by line.
+    FILE* booksFile = fopen("books.txt", "a");
+    if(!booksFile) {
+        perror("File opening failed");
+        fopen("books.txt", "w");
+        return EXIT_FAILURE;
+    }
+    //Writing Customer Data for its listing
+    fprintf(booksFile, "Book ID #%d |"
+                           "Book Name: %s |"
+                           "Author Name: %s |"
+                           "Age Limit: %d |"
+                           "Rent: %d\n",
+            newBook.B_ID,
+            newBook.Name,
+            newBook.Author,
+            newBook.AgeLimit,
+            newBook.PricePerWeek,
+            newBook.Rented);
+    fclose(booksFile);
+    return 0;
+}
+//Selects the customer by ID and transfers the input deposit into the specified customer's account
+int depositMoney()
+{
+    int _customerID, _deposit;
+    printf("Deposit destination Customer ID:\n");
+    scanf("%d", &_customerID);
+    printf("Quantity of the deposit:\n");
+    scanf("%d", &_deposit);
+
+    for(int _cid = 0; _cid < sizeof Customers; _cid++)
+    {
+       if(Customers[_cid].C_ID == _customerID)
        {
-           Customers[element].Wallet =  Customers[element].Wallet + _deposit;
+           Customers[_cid].Wallet = Customers[_cid].Wallet + _deposit;
+           return 0;
        }
     }
 }
-
-//adds new book
-void addBook(char _name[25], char _author[25],  int _ageLimit,  double _pricePerWeek, bool _rented)
-{
-    //! Auto-Increment #B_ID_ENUMERATION
-    //Open the Books.txt
-    //add a new book within the limitations
-    //save it to the list
-    //close the file
-}
-
 
 void rentBook(int _customerID, int _bookID, char _date[15], int _week)
 {
@@ -237,7 +318,7 @@ void updateCustomer(char _name[25], char _surname[25], int age)
 
 }
 
-void updateBook(char _name[25], char _author[25],  int _ageLimit,  double _pricePerWeek)
+void updateBook(char _name[25], char _author[25],  int _ageLimit,  int _pricePerWeek)
 {
 
 }
@@ -249,29 +330,75 @@ void listCustomersRentedBook()
 
 int listCustomers()
 {
-    printf("List of our precious customers\n");
-    //Writing every element of the Customers array into the Customers.txt
-    FILE* customersFile = fopen("Customers.txt", "r");
-    if(!customersFile) {
-        perror("Customers.txt file opening failed");
-        return EXIT_FAILURE;
-    }
-    char c;
-    c = fgetc(customersFile);
-    while (c != EOF)
-    {
-        printf ("%c", c);
-        c = fgetc(customersFile);
-    }
-    fclose(customersFile);
+//    printf("List of our precious customers\n");
+//    //Writing every element of the Customers array into the Customers.txt
+//    FILE* customersFile = fopen("Customers.txt", "r");
+//    if(!customersFile) {
+//        perror("Customers.txt file opening failed");
+//        return EXIT_FAILURE;
+//    }
+//    char c;
+//    c = fgetc(customersFile);
+//    while (c != EOF)
+//    {
+//        printf ("%c", c);
+//        c = fgetc(customersFile);
+//    }
+//    fclose(customersFile);
+    toCustomersArray();
+    printCustomersArray();
     return 0;
 }
 
 void listBooks()
 {
-
+    //read later from the book file
+    printBooksArray();
 }
-
+int getBookInput()
+{
+    //Processing the option
+    bool isBook = false;
+    //A control element, bool, to stop asking for the information from the
+    while(!isBook)
+    {
+        //Getting a name from the user
+        printf("Enter the book name:\n");
+        char _name[25];
+        scanf("%s", _name);
+        //Getting a surname from the user
+        printf("Enter the author name:\n");
+        char _authorName[25];
+        scanf("%s", _authorName);
+        printf("Enter the age limit:\n");
+        int _ageLimit;
+        scanf("%d", &_ageLimit);
+        printf("Enter the price per week:\n");
+        int _pricePerWeek;
+        scanf("%d", &_pricePerWeek);
+        //Books are not rented initially.
+        bool _isRented = false;
+        //Checking for the name and author name whether they are in the books list
+        for (int i = 0; i < sizeof Customers; i++)
+        {
+            if (Books[i].Name == _name || Books[i].Author == _authorName)
+            {
+                perror("The book already exits!");
+                return -1;
+            } else{
+                isBook = true;
+                //Passing the user input into list by newBook method
+                newBook(_name,
+                        _authorName,
+                        _ageLimit,
+                        _pricePerWeek,
+                        _isRented);
+                return -1;
+                //The loop, asking for the user information, ends due to the valid information
+            }
+        }
+    }
+}
 //Enumerates Customer IDs -> static variable to create unique IDs
 static int C_ID_ENUMERATION = 1;
 int getCustomerInput()
@@ -319,6 +446,8 @@ int getCustomerInput()
 
 int runProgram()
 {
+    //CREATING REQUIRED FILES AT THE BEGINNING OF THE PROGRAM
+    //********************************************************************//
     FILE* readCustomersFile = fopen("Customers.txt", "r");
     //Checking whether the file exists for read mode
     if(!readCustomersFile) {
@@ -328,7 +457,19 @@ int runProgram()
     }
     // Now reading the file created recently
     FILE* customersFile = fopen("Customers.txt", "r");
+    //********************************************************************//
+    FILE* readBooksFile = fopen("books.txt", "r");
+    //Checking whether the file exists for read mode
+    if(!readBooksFile) {
+        //if not, creating Customers.txt file
+        FILE* writeBookssFile = fopen("books.txt", "w");
+        fclose(writeBookssFile);
+    }
+    // Now reading the file created recently
+    FILE* booksFile = fopen("books.txt", "r");
     //Looping the program
+    //Looping the program
+    //********************************************************************//
     bool isExit = false;
     while(!isExit)
     {
@@ -361,19 +502,24 @@ int runProgram()
                 fclose(customersFile);
                 break;
             case 2:
+                depositMoney();
                 fclose(customersFile);
                 break;
             case 3:
-                fclose(customersFile);
+                getBookInput();
+                fclose(booksFile);
                 break;
             case 4:
                 fclose(customersFile);
+                fclose(booksFile);
                 break;
             case 5:
                 fclose(customersFile);
+                fclose(booksFile);
                 break;
             case 6:
                 fclose(customersFile);
+                fclose(booksFile);
                 break;
             case 7:
                 fclose(customersFile);
@@ -389,6 +535,8 @@ int runProgram()
                 fclose(customersFile);
                 break;
             case 11:
+                listBooks();
+                fclose(booksFile);
                 break;
             default:
                 perror("Invalid Input!");
