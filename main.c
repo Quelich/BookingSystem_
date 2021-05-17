@@ -141,44 +141,15 @@ int toCustomersArray() {
     return 0;
 }
 
-//Saves the buffer input data of Customers into machine-readable format (line-each-data)
-int saveBufferCustomerData(struct Customer newCustomerBufferData)
-{
-    //Checking whether the file exists for read mode
-    FILE* readCustomersBufferDataFile = fopen("CustomersBufferData.txt", "r");
-    if(!readCustomersBufferDataFile) {
-        //if not, creating CustomersBufferData.txt file
-        FILE* writeCustomersBufferDataFile = fopen("CustomersBufferData.txt", "w");
-        fclose(writeCustomersBufferDataFile);
-    }
-    FILE* customersBufferDataFile = fopen("CustomersBufferData.txt", "a");
-    if(!customersBufferDataFile) {
-        perror("File opening failed");
-        fopen("CustomersBufferData.txt", "w");
-        return EXIT_FAILURE;
-    }
-    fprintf(customersBufferDataFile, "%d|"
-                                     "%s|"
-                                     "%s|"
-                                     "%d|"
-                                     "%d\n",
-            newCustomerBufferData.C_ID,
-            newCustomerBufferData.Name,
-            newCustomerBufferData.Surname,
-            newCustomerBufferData.Age,
-            newCustomerBufferData.Wallet);
-    fclose(customersBufferDataFile);
-    return 0;
-}
 
-//Creates a new customer and saves it into the Customers array
+//Creates a new customer -- saves it into the Customers array
+//save is into the CustomersBufferData.txt because I cannot manipulate the string in Customers.txt to obtain data
+//Therefore I created another file that gets the same data but saves it by "|" in order to save the data into Customers array
 int newCustomer(char _name[25], char _surname[25], int _age, int _wallet)
 {
-    toCustomersArray();
-
+    toCustomersArray(); //Initializing the array
     //Creating a new Customer and passing the parameters, taken from the user, into it
     int countLines = countAll("CustomersBufferData.txt");
-
     //Saving the customer into the array
     Customers[countLines+1].C_ID = countLines;
     strcpy( Customers[countLines+1].Name,_name);
@@ -237,7 +208,6 @@ int newCustomer(char _name[25], char _surname[25], int _age, int _wallet)
 //Selects the customer by ID and transfers the input deposit into the specified customer's account
 void modifyCustomers()
 {
-    toCustomersArray();
     FILE *modifyCustomers;
     modifyCustomers = fopen("CustomersBufferData.txt", "w");
     int countLines = countAll("CustomersBufferData.txt");
@@ -248,27 +218,21 @@ void modifyCustomers()
 }
 int depositMoney()
 {
-    toCustomersArray();
+    toCustomersArray(); //Initializing the array
     int _customerID, _deposit;
     printf("Deposit destination Customer ID:\n");
     scanf("%d", &_customerID);
     printf("Quantity of the deposit:\n");
     scanf("%d", &_deposit);
-
-    for(int _cid = 0; _cid < sizeof Customers; _cid++)
-    {
-       if(Customers[_cid].C_ID == _customerID)
-       {
-           Customers[_cid].Wallet = Customers[_cid].Wallet + _deposit;
-       }
-    }
-    //Modifying Customers txt after the job is done
+    int countLines = countAll("CustomersBufferData.txt");
+    Customers[_customerID].Wallet = Customers[_customerID].Wallet + _deposit;
+    printf("Deposit has successfully transferred!");
     modifyCustomers();
-    return 0;
+    return -1;
 }
 int listCustomers()
 {
-    toCustomersArray();
+    toCustomersArray(); //Initializing the array
     printCustomersArray();
     return 0;
 }
