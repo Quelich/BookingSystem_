@@ -243,10 +243,20 @@ int depositMoney()
     fclose(customersData);
     return -1;
 }
+#define MAXCHAR 250
 int listCustomers()
 {
     toCustomersArray(); //Initializing the array
-    printCustomersArray();
+    FILE* readCustomersBufferDataFile = fopen("Customers.txt", "r");
+    if(!readCustomersBufferDataFile) {
+        perror("File opening failed");
+        fopen("Customers.txt", "w");
+        return EXIT_FAILURE;
+    }
+    char text[MAXCHAR];
+    while (fgets(text, MAXCHAR, readCustomersBufferDataFile) != NULL)
+        printf("%s", text);
+    fclose(readCustomersBufferDataFile);
     return 0;
 }
 
