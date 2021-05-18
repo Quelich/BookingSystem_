@@ -549,17 +549,23 @@ int rentBook()
         }
         book++;
     }
-    if(isRented == false && hasCredits == true && restrictedAge == false)
+    if(isRented == false || hasCredits == true || restrictedAge == false)
     {
-        //Writing the information into rented.txt
+        // Updating the book information as rented(true)
+        Books[book].Rented = true;
+        //Decreasing the customer's wallet balance according to the week and book priced
+        Customers[_cid].Wallet = Customers[_cid].Wallet - (Books[_bid].PricePerWeek * _periodWeek);
+        //Updating the information within rented.txt
         FILE *appendRentedFile = fopen("rented.txt", "a");
         int countLines = countAll("rented.txt"); // for arranging IDs in auto-increment mode
-
+        for (int i = 1; i < countLines+1; ++i) {
+            //fprintf(appendRentedFile, "%d|%d|%d")  How to get the date
+        }
         fclose(appendRentedFile);
     }
     else
     {
-        printf("You do not fulfill the requirements!\n");
+        printf("***You do not fulfill the requirements!***\n");
         return -1;
     }
 }
