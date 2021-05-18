@@ -37,7 +37,6 @@ struct Customer
 #pragma endregion Structures
 
 
-
 #pragma region Lists of the data
 //Stores the information all Customer and saves the information into the Customers list
 static struct Customer Customers[150];
@@ -54,7 +53,6 @@ static int enumerate_latest_BID = 0;
 static int R_ID_ENUMERATION = 1;
 static int enumerate_latest_CID = 0; // Storing the last ID executed in the file by counting the line numbers
 #pragma endregion Enumeraters of ID numbers
-
 
 
 #pragma region Functions For Array Operations
@@ -91,6 +89,7 @@ void printCustomersArray()
     }
 }
 
+//! Bu metodu düzelt serkanınkine benzemesin
 int toCustomersArray() {
     FILE *customersBufferDataFile = fopen("CustomersBufferData.txt", "r");
     int lineCounter = countAll("CustomersBufferData.txt");
@@ -264,6 +263,7 @@ int listCustomers()
 static int C_ID_ENUMERATION = 1;
 int getCustomerInput()
 {
+
     printf("Enter the customer name:\n");
     char _name[25];
     scanf("%s", _name);
@@ -277,14 +277,46 @@ int getCustomerInput()
     printf("Enter the customer Wallet:\n");
     int _wallet;
     scanf("%d", &_wallet);
+    // Getting the data of customers from the CustomersBufferData.txt
+    toCustomersArray();
     //Checking for the name and surname whether they are in the customers list
-
-    newCustomer(_name,
-                _surname,
-                _age,
-                _wallet);
+    int compareName = 1;
+    int compareSurname;
+    int customer = 1;
+    bool hasInput = false;
+    while(compareName == 1)
+    {
+        //using strcmp to detect whether the given name and surname exist
+        compareName = strcmp(Customers[customer].Name,_name);
+        compareSurname = strcmp(Customers[customer].Surname, _surname);
+        if(compareName == 0)
+        {
+            hasInput = true;
+            break;
+        }
+        if(compareSurname == 0)
+        {
+            hasInput = true;
+            break;
+        }
+        customer++;
+    }
+    if(hasInput)
+    {
+        printf("[%s %s] already exists\n", _name, _surname);
+        return -1;
+    }
+    else
+    {
+        newCustomer(_name,
+                    _surname,
+                    _age,
+                    _wallet);
+        printf("[%s %s] has been added into the database\n", _name, _surname);
+    }
     return -1;
 }
+
 
 int runProgram() {
     //CREATING REQUIRED FILES AT THE BEGINNING OF THE PROGRAM
