@@ -13,7 +13,7 @@ struct Book
     char Author[25];
     int AgeLimit;
     int PricePerWeek;
-    bool Rented;
+    int Rented;
 };
 //Stores the information of Rented object
 struct Rented
@@ -206,22 +206,18 @@ int toBooksArray()
                     }
                     if(reset == 5)
                     {
-                        if(strcmp(pch,"false") == 0)
-                        {
-                            Books[counter].Rented = false;
-                        }
-                        else
-                        {
-                            Books[counter].Rented = true;
-                        }
+                        Books[counter].Rented = atoi(pch);
                     }
                     reset++;
                     pch = strtok(NULL, "|");
                 }
             }
+            fclose(booksBufferDataFile);
+
         }
+
     }
-    fclose(booksBufferDataFile);
+
     return 0;
 }
 
@@ -273,7 +269,7 @@ int modifyCustomers(int _countLines, char _name[25], char _surname[25], int _age
     return -1;
 }
 //Selects the book by ID and transfers the input deposit into the specified book
-int modifyBooks(int _countLines,char _bookName[25], char _author[25], int _ageLimit, int _pricePerWeek, bool _isRented)
+int modifyBooks(int _countLines,char _bookName[25], char _author[25], int _ageLimit, int _pricePerWeek, int _isRented)
 {
     FILE* readBooksBufferDataFile = fopen("BooksBufferData.txt", "r");
     if(!readBooksBufferDataFile) {
@@ -298,10 +294,8 @@ int modifyBooks(int _countLines,char _bookName[25], char _author[25], int _ageLi
             _author,
             _ageLimit,
             _pricePerWeek,
-            _isRented ? "true": "false");
-    fclose(booksBufferDataFile);
-    //Also saving to Customers.txt in order for listing
-    FILE* booksFile = fopen("books.txt", "a");
+            _isRented == 1 ? "true": "false");
+    fclose(booksBufferDataFile);FILE* booksFile = fopen("books.txt", "a");
     if(!booksFile) {
         perror("File opening failed");
         fopen("books.txt", "w");
@@ -319,7 +313,7 @@ int modifyBooks(int _countLines,char _bookName[25], char _author[25], int _ageLi
             _author,
             _ageLimit,
             _pricePerWeek,
-            _isRented ? "true" : "false");
+            _isRented == 1 ? "true" : "false");
     fclose(booksFile);
     return -1;
 }
@@ -382,10 +376,10 @@ int newBook(char _bookName[25], char _author[25], int _ageLimit, int _pricePerWe
     strcpy( Books[countLines+1].Author,_author);
     Books[countLines+1].AgeLimit = _ageLimit;
     Books[countLines+1].PricePerWeek = _pricePerWeek;
-    Books[countLines+1].Rented = false;
+    Books[countLines+1].Rented = 0;
     //Saving the data after the operation
     //Initially the book is not rented
-    modifyBooks(countLines,_bookName,_author,_ageLimit,_pricePerWeek,false);
+    modifyBooks(countLines,_bookName,_author,_ageLimit,_pricePerWeek,0);
     return 0;
 }
 int newRented(int _cid, int _bid, int _rentDate, int _week)
@@ -613,9 +607,9 @@ int getRentedInput()
     scanf("%d", &_periodWeek);
     //Checking if the restrictions occur for the specified book.
     toBooksArray();
-    bool _getRented = Books[_bid].Rented;
-    printf("%s is for book #%d",_getRented ? "true": "false", Books[_bid].B_ID, _bid);
-    if(_getRented == true)
+    toCustomersArray();
+    toRentedArray();
+    if(Books[_bid].Rented == 1)
     {
         perror("The book is already rented!\n");
         return -1;
@@ -663,7 +657,7 @@ int getRentedInput()
 
     /**Updating books.txt and BooksBufferData.txt**/
     toBooksArray();
-    Books[_bid].Rented = true;
+    Books[_bid].Rented = 1;
     int countLinesBookBuffer = countAll("BooksBufferData.txt");
     FILE *booksBufferData = fopen("BooksBufferData.txt", "w");
     for (int i = 1; i < countLinesBookBuffer+1; ++i) {
@@ -671,7 +665,9 @@ int getRentedInput()
     }
     fclose(booksBufferData);
     FILE *booksData = fopen("books.txt", "w");
+
     for (int i = 1; i < countLinesBookBuffer+1; ++i) {
+
         fprintf(booksData,      "Book ID #%d |"
                                 "Book Name: %s |"
                                 "Book Author: %s |"
@@ -683,7 +679,7 @@ int getRentedInput()
                 Books[i].Author,
                 Books[i].AgeLimit,
                 Books[i].PricePerWeek,
-                Books[i].Rented ? "true" : "false");
+                Books[i].Rented == 1 ? "true" : "false");
     }
     fclose(booksData);
     /**Updating books.txt and BooksBufferData.txt**/
