@@ -518,16 +518,15 @@ int getCustomerInput()
     if(hasInput)
     {
         printf("[%s %s] already exists\n", _name, _surname);
+        customer = 1;
         return -1;
     }
-    else
-    {
-        newCustomer(_name,
-                    _surname,
-                    _age,
-                    _wallet);
-        printf("[%s %s] has been added into the database\n", _name, _surname);
-    }
+    newCustomer(_name,
+                _surname,
+                _age,
+                _wallet);
+    customer = 1;
+    printf("[%s %s] has been added into the database\n", _name, _surname);
     return -1;
 }
 int getBookInput()
