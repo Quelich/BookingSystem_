@@ -46,15 +46,6 @@ static struct Book Books[150];
 static struct Rented RentedBooks[150];
 #pragma endregion Lists of the data
 
-#pragma region Enumeraters of ID numbers
-//Enumerates Book IDs -> static variable to create unique IDs
-static int enumerate_latest_BID = 0;
-//Enumerates Rented Book IDs -> static variable to create unique IDs
-static int R_ID_ENUMERATION = 1;
-static int enumerate_latest_CID = 0; // Storing the last ID executed in the file by counting the line numbers
-#pragma endregion Enumeraters of ID numbers
-
-
 #pragma region Functions For Array Operations
 //Counting line in order to indicate the current customer's ID
 
@@ -162,17 +153,6 @@ int toRentedArray()
                     if (reset == 3) {
                         RentedBooks[counter].Date = atoi(pch);
                     }
-                    if (reset == 4) {
-                        bool _isRented = false;
-                        int isTrue = strcmp(pch,"0");
-                        if(isTrue == 0)
-                        {
-                            _isRented = true;
-                        }
-                        {
-                            _isRented = false;
-                        }
-                    }
                     reset++;
                     pch = strtok(NULL, "|");
                 }
@@ -201,6 +181,7 @@ int toBooksArray()
                 pch = strtok(str, "|");
                 int reset = 0;
                 while (pch != NULL) {
+                    //! SWITCH
                     if (reset == 0) {
                         Books[counter].B_ID = atoi(pch);
                     }
@@ -225,14 +206,13 @@ int toBooksArray()
                     }
                     if(reset == 5)
                     {
-                        bool _isRented = false;
-                        int isTrue = strcmp(pch,"0");
-                        if(isTrue == 0)
+                        if(strcmp(pch,"false") == 0)
                         {
-                            _isRented = true;
+                            Books[counter].Rented = false;
                         }
+                        else
                         {
-                            _isRented = false;
+                            Books[counter].Rented = true;
                         }
                     }
                     reset++;
@@ -270,7 +250,6 @@ int modifyCustomers(int _countLines, char _name[25], char _surname[25], int _age
             _surname,
             _age,
             _wallet);
-
     fclose(customersBufferDataFile);
     //Also saving to Customers.txt in order for listing1
     FILE* customersFile = fopen("Customers.txt", "a");
@@ -313,13 +292,13 @@ int modifyBooks(int _countLines,char _bookName[25], char _author[25], int _ageLi
                                      "%s|"
                                      "%d|"
                                      "%d|"
-                                     "%d\n",
+                                     "%s\n",
             _countLines+1,
             _bookName,
             _author,
             _ageLimit,
             _pricePerWeek,
-            _isRented);
+            _isRented ? "true": "false");
     fclose(booksBufferDataFile);
     //Also saving to Customers.txt in order for listing
     FILE* booksFile = fopen("books.txt", "a");
@@ -334,13 +313,13 @@ int modifyBooks(int _countLines,char _bookName[25], char _author[25], int _ageLi
                            "Book Author: %s |"
                            "Book Age Limit: %d |"
                            "Book Price per Week: %d|"
-                           "Book Rented: %d\n",
+                           "Book Rented: %s\n",
             _countLines+1,
             _bookName,
             _author,
             _ageLimit,
             _pricePerWeek,
-            _isRented);
+            _isRented ? "true" : "false");
     fclose(booksFile);
     return -1;
 }
@@ -393,7 +372,7 @@ int newCustomer(char _name[25], char _surname[25], int _age, int _wallet)
 }
 //Creates a new book -- saves it into the Books array as Book struct elements
 //also saves into Book Struct because I cannot manipulate the string in Customers.txt to obtain the required data
-int newBook(char _bookName[25], char _author[25], int _ageLimit, int _pricePerWeek, bool _isRented)
+int newBook(char _bookName[25], char _author[25], int _ageLimit, int _pricePerWeek)
 {
     toBooksArray();//Initializing books.txt array
     int countLines = countAll("BooksBufferData.txt");
@@ -403,9 +382,10 @@ int newBook(char _bookName[25], char _author[25], int _ageLimit, int _pricePerWe
     strcpy( Books[countLines+1].Author,_author);
     Books[countLines+1].AgeLimit = _ageLimit;
     Books[countLines+1].PricePerWeek = _pricePerWeek;
-    Books[countLines+1].Rented = _isRented;
+    Books[countLines+1].Rented = false;
     //Saving the data after the operation
-    modifyBooks(countLines,_bookName,_author,_ageLimit,_pricePerWeek,_isRented);
+    //Initially the book is not rented
+    modifyBooks(countLines,_bookName,_author,_ageLimit,_pricePerWeek,false);
     return 0;
 }
 int newRented(int _cid, int _bid, int _rentDate, int _week)
@@ -571,8 +551,7 @@ int getBookInput()
     printf("Enter the price of specified book per week:\n");
     int _pricePerWeek;
     scanf("%d", &_pricePerWeek);
-    //Initial _isRented value of books are set to false due to the convenience concerns
-    bool _isRented = false;
+
     toBooksArray();
     //Checking for the name and surname whether they are in the customers list
     int compareName = 1;
@@ -601,18 +580,16 @@ int getBookInput()
         printf("[%s written by %s] already exists\n", _bookName, _authorName);
         return -1;
     }
-    else
-    {
-        newBook(_bookName,
-                    _authorName,
-                    _ageLimit,
-                    _pricePerWeek,
-                    _isRented);
-        printf("[%s written by %s] has been added into the database\n", _bookName, _authorName);
-    }
+    //Initial _isRented value of books are set to false due to the concerns on optimization
+    newBook(_bookName,
+            _authorName,
+            _ageLimit,
+            _pricePerWeek);
+    printf("[%s written by %s] has been added into the database\n", _bookName, _authorName);
     return -1;
 }
 //Getting the current date to be compared with - I just compare the days because the books are rented weekly
+//!SO I DO NOT GET WEEK NUMBERS
 int getDate()
 {
     time_t s;
@@ -625,8 +602,6 @@ int getDate()
 //And sends to the rent book to process the data and complete the operations
 int getRentedInput()
 {
-
-
     printf("What's your Customer ID:\n");
     int _cid;
     scanf("%d", &_cid);
@@ -637,7 +612,10 @@ int getRentedInput()
     int _periodWeek;
     scanf("%d", &_periodWeek);
     //Checking if the restrictions occur for the specified book.
-    if(Books[_bid].Rented == true)
+    toBooksArray();
+    bool _getRented = Books[_bid].Rented;
+    printf("%s is for book #%d",_getRented ? "true": "false", Books[_bid].B_ID, _bid);
+    if(_getRented == true)
     {
         perror("The book is already rented!\n");
         return -1;
@@ -656,28 +634,19 @@ int getRentedInput()
     //The customer's wallet will be updated
     //The book's "isRented" value will be updated
     //Getting the current day to compare with the
-    int _rentedDate = getDate(); //as days
-    //Created a new rented book entry
-    newRented(_cid,
-              _bid,
-              _rentedDate,
-              _periodWeek);
-    printf("The book %s  has successfully rented by %s %s\n", Books[_bid].Name,Customers[_cid].Name, Customers[_cid].Surname);
-    /******Updating the information within customers.txt*****/
-    //Decreasing the customer's wallet balance according to the week and book priced
-    Customers[_cid].Wallet = Customers[_cid].Wallet - (Books[_bid].PricePerWeek * _periodWeek);
-    int customerBufferDataCountLines = countAll("CustomersBufferData.txt");
-    toCustomersArray(); // Initializing the array before the operation, no initialization means no array :)
-    FILE *customersBufferData;
-    customersBufferData = fopen("CustomersBufferData.txt", "w");
-    for (int i = 1; i < customerBufferDataCountLines+1; ++i) {
+
+    /**Updating customers.txt and CustomersBufferData.txt**/
+    toCustomersArray();
+    Customers[_cid].Wallet =  Customers[_cid].Wallet - (Books[_bid].PricePerWeek * _periodWeek);
+    int countLinesCustomerBuffer = countAll("CustomersBufferData.txt");
+    FILE *customersBufferData = fopen("CustomersBufferData.txt", "w");
+    for (int i = 1; i < countLinesCustomerBuffer+1; ++i) {
         fprintf(customersBufferData, "%d|%s|%s|%d|%d\n", i, Customers[i].Name, Customers[i].Surname, Customers[i].Age,   Customers[i].Wallet);
     }
     fclose(customersBufferData);
-    int customersCountLines = countAll("Customers.txt");
     FILE *customersData;
     customersData = fopen("Customers.txt", "w");
-    for (int i = 1; i < customersCountLines+1; ++i) {
+    for (int i = 1; i < countLinesCustomerBuffer+1; ++i) {
         fprintf(customersData, "Customer ID #%d |"
                                "Customer Name: %s |"
                                "Customer Surname: %s |"
@@ -690,54 +659,44 @@ int getRentedInput()
                 Customers[i].Wallet);
     }
     fclose(customersData);
-    /******Updating the information within customers.txt*****/
-    /******Updating the information within books.txt*****/
-    // Updating the book information as rented(true)
-    Books[_bid].Rented = true;
+    /**Updating customers.txt and CustomersBufferData.txt**/
 
-    toRentedArray();// Initializing the array before the operation, no initialization means no array :)
-    FILE* readRentedFile = fopen("rented.txt", "r");
-    if(!readRentedFile) {
-            //if not, creating CustomersBufferData.txt file
-            FILE* writeRentedFile = fopen("rented.txt", "w");
-            fclose(writeRentedFile);
-        }
-        FILE* appendRentedFile = fopen("rented.txt", "a");
-    if(!appendRentedFile) {
-            perror("File opening failed");
-            fopen("rented.txt", "w");
-            return EXIT_FAILURE;
-        }
-    int countRentedLines = countAll("rented.txt");
-    fprintf(appendRentedFile, "%d|%d|%d|%d|%d", countRentedLines+1, _cid,_bid, _rentedDate, _periodWeek);
-    fclose(appendRentedFile);
-    /******Updating the information within rented.txt*****/
-    /******Updating the information within books.txt*****/
-    toBooksArray(); // Initializing the array before the operation, no initialization means no array :)
-    FILE *writeBooksBufferDataFile = fopen("BooksBufferData.txt", "w");
-    int linesBooksBufferData = countAll("BooksBufferData.txt");
-    for (int i = 1; i < linesBooksBufferData+1; ++i) {
-        fprintf(writeBooksBufferDataFile, "%d|%s|%s|%d|%d|%d\n", i, Books[i].Name, Books[i].Author, Books[i].AgeLimit, Books[i].PricePerWeek, Books[i].Rented);
+    /**Updating books.txt and BooksBufferData.txt**/
+    toBooksArray();
+    Books[_bid].Rented = true;
+    int countLinesBookBuffer = countAll("BooksBufferData.txt");
+    FILE *booksBufferData = fopen("BooksBufferData.txt", "w");
+    for (int i = 1; i < countLinesBookBuffer+1; ++i) {
+        fprintf(booksBufferData, "%d|%s|%s|%d|%d|%d\n", i, Books[i].Name, Books[i].Author, Books[i].AgeLimit,   Books[i].PricePerWeek,Books[i].Rented);
     }
-    fclose(writeBooksBufferDataFile);
-    FILE *writeBooksFile = fopen("books.txt", "w");
-    int linesBooksData = countAll("books.txt");
-    for (int i = 1; i < linesBooksData+1; ++i) {
-        fprintf(writeBooksFile,     "Book ID #%d |"
-                                    "Book Name: %s |"
-                                    "Book Author: %s |"
-                                    "Book Age Limit: %d |"
-                                    "Book Price per Week: %d|"
-                                    "Book Rented: %d\n",
+    fclose(booksBufferData);
+    FILE *booksData = fopen("books.txt", "w");
+    for (int i = 1; i < countLinesBookBuffer+1; ++i) {
+        fprintf(booksData,      "Book ID #%d |"
+                                "Book Name: %s |"
+                                "Book Author: %s |"
+                                "Book Age Limit: %d |"
+                                "Book Price per Week: %d|"
+                                "Book Rented: %s\n",
                 i,
                 Books[i].Name,
                 Books[i].Author,
                 Books[i].AgeLimit,
                 Books[i].PricePerWeek,
-                Books[i].Rented);
+                Books[i].Rented ? "true" : "false");
     }
-    fclose(writeBooksFile);
-    /******Updating the information within rented.txt*****/
+    fclose(booksData);
+    /**Updating books.txt and BooksBufferData.txt**/
+
+    /***Updating rented.txt***/
+    int _rentedDate = getDate(); //as days
+    //Created a new rented book entry
+    newRented(_cid,
+              _bid,
+              _rentedDate,
+              _periodWeek);
+    printf("The book %s has successfully rented by %s %s\n", Books[_bid].Name,Customers[_cid].Name, Customers[_cid].Surname);
+    /***Updating rented.txt***/
     return -1;
 }
 
@@ -772,7 +731,6 @@ int runProgram() {
         fclose(writeRentedFile);
     }
     // Now reading the file created recently
-    FILE *rentedFile = fopen("rented.txt", "r");
     //********************************************************************//
     /**CREATING REQUIRED FILES AT THE BEGINNING OF THE PROGRAM**/
     bool isExit = false;
