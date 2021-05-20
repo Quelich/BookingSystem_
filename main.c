@@ -615,8 +615,6 @@ int deliverBook() {
     remainingDays = (double)(expectedDate - deliveryDay) / 7; // first finding the difference between expected and actual days and dividing by 7 to find the weeks
     double remainingWeek = round(remainingDays);
     int returnMoney = (int)(remainingWeek * _priceOfBook); // This amount will be returned
-    printf("The customer #%d keeps Book #%d\n", _cid, _bid); //!delete later
-    printf("The rounded remaining week is %f\n", remainingDays); //!delete later
     //Rearranging the customer's wallet, the book's rented status
     Customers[_cid].Wallet =  Customers[_cid].Wallet + returnMoney; //the money is refunded
     Books[_bid].Rented = 0; // The books is now changed to "false"
