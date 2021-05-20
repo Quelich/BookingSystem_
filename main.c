@@ -463,6 +463,7 @@ int listBooks()
 int listRentedBooks()
 {
     toRentedArray();
+    printf("First Column R_ID:Second Column C_ID:Third Column B_ID:Fourth Column Rent Day: Final Column Weeks\n");
     FILE* readRentedBooks = fopen("rented.txt", "r");
     if(!readRentedBooks) {
         perror("File opening failed");
