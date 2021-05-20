@@ -347,6 +347,47 @@ int modifyRentedBooks(int _countLines, int _cid, int _bid, int _rentDate, int _w
     fclose(appendRentedBookFile);
     return -1;
 }
+int updateCustomer()
+{
+ toCustomersArray();
+ char _newName[25], _newSurname[25];
+ int _newAge, _cid;
+ printf("Enter the customer ID information you want to update:\n");
+ scanf("%d", &_cid);
+ printf("Enter the new name:\n");
+ scanf("%s", _newName);
+ printf("Enter the new surname:\n");
+ scanf("%s", _newSurname);
+ printf("Enter the new age:\n");
+ scanf("%d", &_newAge);
+ strcpy(Customers[_cid].Name, _newName);
+ strcpy(Customers[_cid].Surname, _newSurname);
+ Customers[_cid].Age = _newAge;
+    /**Updating customers.txt and CustomersBufferData.txt**/
+    int countLinesCustomerBuffer = countAll("CustomersBufferData.txt");
+    FILE *customersBufferData = fopen("CustomersBufferData.txt", "w");
+    for (int i = 1; i < countLinesCustomerBuffer+1; ++i) {
+        fprintf(customersBufferData, "%d|%s|%s|%d|%d\n", i, Customers[i].Name, Customers[i].Surname, Customers[i].Age,   Customers[i].Wallet);
+    }
+    fclose(customersBufferData);
+    FILE *customersData;
+    customersData = fopen("Customers.txt", "w");
+    for (int i = 1; i < countLinesCustomerBuffer+1; ++i) {
+        fprintf(customersData, "Customer ID #%d |"
+                               "Customer Name: %s |"
+                               "Customer Surname: %s |"
+                               "Customer Age: %d |"
+                               "Customer Wallet: %d\n",
+                i,
+                Customers[i].Name,
+                Customers[i].Surname,
+                Customers[i].Age,
+                Customers[i].Wallet);
+    }
+    fclose(customersData);
+    /**Updating customers.txt and CustomersBufferData.txt**/
+    return -1;
+}
 //Creates a new customer -- saves it into the Customers array as Customer struct elements
 //also saves into Book struct because I cannot manipulate the string in Customers.txt to obtain data
 //Therefore I created another file that gets the same data but saves it by "|" in order to save the data into Customers array
@@ -851,6 +892,7 @@ int runProgram() {
             case 6:
                 break;
             case 7:
+                updateCustomer();
                 break;
             case 8:
                 break;
