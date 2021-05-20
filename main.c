@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #pragma region Structures
 //Stores the information of Book object
@@ -591,6 +592,85 @@ int getDate()
     current_time = localtime(&s);
     return current_time->tm_mday;
 }
+int deliverBook() {
+    int countRentedFileLines = countAll("rented.txt"); // To count the quantity rented books
+    int _rid, _bid, _cid, _priceOfBook, rentedDay, rentedForWeek, expectedDate;
+    double remainingDays;
+    int deliveryDay; //Gets the actual delivery day
+    printf("Enter the rented book id you want to deliver:\n");
+    scanf("%d", &_rid);
+    printf("Enter the day of the delivery date:\n'Example: It's 28.05.2021' -> 28\n");
+    scanf("%d", &deliveryDay);
+    toCustomersArray(); //Initializing the Customers array
+    toBooksArray();//Initializing the Book array
+    toRentedArray();//Initializing the Rented array
+    _bid = RentedBooks[_rid].B_ID; //Getting the book id of the rented book wanted to be delivered
+    _cid = RentedBooks[_rid].C_ID; //Getting the customer id of the rented book wanted to be delivered
+    _priceOfBook = Books[_bid].PricePerWeek;
+    rentedDay = RentedBooks[_rid].Date; // it gets the day of rented date
+    rentedForWeek = RentedBooks[_rid].Week; // It gets the week value that the customer is rented for weeks
+    expectedDate = rentedDay + (rentedForWeek * 7); //It calculates the expected day
+    //Calculating the amount of the returning money
+    remainingDays = (double)(expectedDate - deliveryDay) / 7; // first finding the difference between expected and actual days and dividing by 7 to find the weeks
+    double remainingWeek = round(remainingDays);
+    int returnMoney = (int)(remainingWeek * _priceOfBook); // This amount will be returned
+    printf("The customer #%d keeps Book #%d\n", _cid, _bid); //!delete later
+    printf("The rounded remaining week is %f\n", remainingDays); //!delete later
+    //Rearranging the customer's wallet, the book's rented status
+    Customers[_cid].Wallet =  Customers[_cid].Wallet + returnMoney; //the money is refunded
+    Books[_bid].Rented = 0; // The books is now changed to "false"
+    /**Updating customers.txt and CustomersBufferData.txt**/
+    int countLinesCustomerBuffer = countAll("CustomersBufferData.txt");
+    FILE *customersBufferData = fopen("CustomersBufferData.txt", "w");
+    for (int i = 1; i < countLinesCustomerBuffer+1; ++i) {
+        fprintf(customersBufferData, "%d|%s|%s|%d|%d\n", i, Customers[i].Name, Customers[i].Surname, Customers[i].Age,   Customers[i].Wallet);
+    }
+    fclose(customersBufferData);
+    FILE *customersData;
+    customersData = fopen("Customers.txt", "w");
+    for (int i = 1; i < countLinesCustomerBuffer+1; ++i) {
+        fprintf(customersData, "Customer ID #%d |"
+                               "Customer Name: %s |"
+                               "Customer Surname: %s |"
+                               "Customer Age: %d |"
+                               "Customer Wallet: %d\n",
+                i,
+                Customers[i].Name,
+                Customers[i].Surname,
+                Customers[i].Age,
+                Customers[i].Wallet);
+    }
+    fclose(customersData);
+    /**Updating customers.txt and CustomersBufferData.txt**/
+    /**Updating books.txt and BooksBufferData.txt**/
+    int countLinesBookBuffer = countAll("BooksBufferData.txt");
+    FILE *booksBufferData = fopen("BooksBufferData.txt", "w");
+    for (int i = 1; i < countLinesBookBuffer+1; ++i) {
+        fprintf(booksBufferData, "%d|%s|%s|%d|%d|%d\n", i, Books[i].Name, Books[i].Author, Books[i].AgeLimit,   Books[i].PricePerWeek,Books[i].Rented);
+    }
+    fclose(booksBufferData);
+    FILE *booksData = fopen("books.txt", "w");
+
+    for (int i = 1; i < countLinesBookBuffer+1; ++i) {
+
+        fprintf(booksData,      "Book ID #%d |"
+                                "Book Name: %s |"
+                                "Book Author: %s |"
+                                "Book Age Limit: %d |"
+                                "Book Price per Week: %d|"
+                                "Book Rented: %s\n",
+                i,
+                Books[i].Name,
+                Books[i].Author,
+                Books[i].AgeLimit,
+                Books[i].PricePerWeek,
+                Books[i].Rented == 1 ? "true" : "false");
+    }
+    fclose(booksData);
+    /**Updating books.txt and BooksBufferData.txt**/
+    printf("The money #%d has successful refunded to customer #%d\n",returnMoney, _cid);
+    return -1;
+}
 //Gets the information of the book that the customer desires to rent
 //And sends to the rent book to process the data and complete the operations
 int getRentedInput()
@@ -767,6 +847,7 @@ int runProgram() {
                 getRentedInput();
                 break;
             case 5:
+                deliverBook();
                 break;
             case 6:
                 break;
