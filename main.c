@@ -388,6 +388,54 @@ int updateCustomer()
     /**Updating customers.txt and CustomersBufferData.txt**/
     return -1;
 }
+int updateBook()
+{
+    toBooksArray();
+    char _newBookName[25], _newBookAuthor[25];
+    int _newAgeLimit, _newPrice, _bid;
+    printf("Enter the book ID information you want to update:\n");
+    scanf("%d", &_bid);
+    printf("Enter the new book name:\n");
+    scanf("%s", _newBookName);
+    printf("Enter the new book author:\n");
+    scanf("%s", _newBookAuthor);
+    printf("Enter the new age limit:\n");
+    scanf("%d", &_newAgeLimit);
+    printf("Enter the new price per week:\n");
+    scanf("%d", &_newPrice);
+    //Updating the new book information in Books array
+    strcpy(Books[_bid].Name, _newBookName);
+    strcpy(Books[_bid].Author, _newBookAuthor);
+    Books[_bid].AgeLimit = _newAgeLimit;
+    Books[_bid].PricePerWeek = _newPrice;
+    /**Updating books.txt and BooksBufferData.txt**/
+    int countLinesBookBuffer = countAll("BooksBufferData.txt");
+    FILE *booksBufferData = fopen("BooksBufferData.txt", "w");
+    for (int i = 1; i < countLinesBookBuffer+1; ++i) {
+        fprintf(booksBufferData, "%d|%s|%s|%d|%d|%d\n", i, Books[i].Name, Books[i].Author, Books[i].AgeLimit,   Books[i].PricePerWeek,Books[i].Rented);
+    }
+    fclose(booksBufferData);
+    FILE *booksData = fopen("books.txt", "w");
+
+    for (int i = 1; i < countLinesBookBuffer+1; ++i) {
+
+        fprintf(booksData,      "Book ID #%d |"
+                                "Book Name: %s |"
+                                "Book Author: %s |"
+                                "Book Age Limit: %d |"
+                                "Book Price per Week: %d|"
+                                "Book Rented: %s\n",
+                i,
+                Books[i].Name,
+                Books[i].Author,
+                Books[i].AgeLimit,
+                Books[i].PricePerWeek,
+                Books[i].Rented == 1 ? "true" : "false");
+    }
+    fclose(booksData);
+    /**Updating books.txt and BooksBufferData.txt**/
+    return -1;
+}
 //Creates a new customer -- saves it into the Customers array as Customer struct elements
 //also saves into Book struct because I cannot manipulate the string in Customers.txt to obtain data
 //Therefore I created another file that gets the same data but saves it by "|" in order to save the data into Customers array
@@ -634,6 +682,7 @@ int getDate()
     current_time = localtime(&s);
     return current_time->tm_mday;
 }
+//Delivering book
 int deliverBook() {
     int countRentedFileLines = countAll("rented.txt"); // To count the quantity rented books
     int _rid, _bid, _cid, _priceOfBook, rentedDay, rentedForWeek, expectedDate;
@@ -895,6 +944,7 @@ int runProgram() {
                 updateCustomer();
                 break;
             case 8:
+                updateBook();
                 break;
             case 9:
                 listRentedBooks();
