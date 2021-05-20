@@ -607,6 +607,7 @@ int getCustomerInput()
         }
         customer++;
     }
+
     if(hasInput)
     {
         printf("[%s %s] already exists\n", _name, _surname);
