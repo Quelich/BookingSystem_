@@ -589,7 +589,8 @@ int getCustomerInput()
     int compareSurname;
     int customer = 1;
     bool hasInput = false;
-    while(compareName == 1)
+    int lines = countAll("CustomersBufferData.txt");
+    while(customer != lines)
     {
         //using strcmp to detect whether the given name and surname exist
         compareName = strcmp(Customers[customer].Name,_name);
